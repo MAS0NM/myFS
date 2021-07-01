@@ -1,3 +1,7 @@
+#pragma ONCE
+#ifndef __TOOLS_H__
+#define __TOOLS_H__
+
 #define MAXOPENFILE 10			//最多同时打开的文件数
 #define BLOCKSIZE 1024			//磁盘块大小
 #define SIZE 1024000			//虚拟磁盘空间大小
@@ -14,7 +18,7 @@ typedef struct FCB
     unsigned short time;        //创建时间
     unsigned short date;        //创建日期
     unsigned short first;       //起始盘块号
-    unsigned long length;      //文件长度
+    unsigned long length;       //文件长度
     char free;                  //表示目录项是否为空
 } fcb;
 
@@ -44,12 +48,13 @@ typedef struct USEROPEN
 }useropen; 
 
 //引导块BLOCK
-typedef struct BLOCK {
-    char magic_number[8];       //文件系统魔数
-    char information[200];      //存储一些描述信息，如磁盘块大小、磁盘块数量、最多打开文件数等
-    unsigned short root;        //根目录文件的起始盘块号
-    unsigned char* startblock;  //在整个磁盘中的首地址
-} block0;
+typedef struct BLOCK0  
+{  
+    char magic[10];             // 文件系统魔数  
+    char information[200];      // 存储一些描述信息，如磁盘块大小、磁盘块数量、最多打开文件数等  
+    unsigned short root;        // 根目录文件的起始盘块号  
+    unsigned char *startblock;  // 虚拟磁盘上数据区开始位置  
+}block0;  
 
 
 unsigned char *myvhard;                 // 指向虚拟磁盘的起始地址  
@@ -60,20 +65,23 @@ unsigned char* startp;                  // 记录虚拟磁盘上数据区开始�
 char myfilename[] = "myfilesys";        //文件系统的文件名  
 
 
-void startsys();  // 进入文件系统  
-void my_format();  // 磁盘格式化  
-void my_cd(char *dirname);  // 更改当前目录  
-void my_mkdir(char *dirname);  // 创建子目录  
-void my_rmdir(char *dirname);  // 删除子目录  
-void my_ls();  // 显示目录  
-void my_create (char *filename);  // 创建文件  
-void my_rm(char *filename);  // 删除文件  
-int my_open(char *filename);  // 打开文件  
-int my_close(int fd);  // 关闭文件  
-int my_write(int fd);  // 写文件  
+void startsys();                        // 进入文件系统  
+void my_format();                       // 磁盘格式化  
+void my_cd(char *dirname);              // 更改当前目录  
+void my_mkdir(char *dirname);           // 创建子目录  
+void my_rmdir(char *dirname);           // 删除子目录  
+void my_ls();                           // 显示目录  
+void my_create (char *filename);        // 创建文件  
+void my_rm(char *filename);             // 删除文件  
+int my_open(char *filename);            // 打开文件  
+int my_close(int fd);                   // 关闭文件  
+int my_write(int fd);                   // 写文件  
 int do_write(int fd, char *text, int len, char wstyle);  // 实际写文件  
-int my_read (int fd, int len);  // 读文件  
+int my_read (int fd, int len);          // 读文件  
 int do_read (int fd, int len,char *text);  // 实际读文件  
-void my_exitsys();  // 退出文件系统  
-unsigned short findblock();  // 寻找空闲盘块  
-int findopenfile();  // 寻找空闲文件表项 
+void my_exitsys();                      // 退出文件系统  
+unsigned short findblock();             // 寻找空闲盘块  
+int findopenfile();                     // 寻找空闲文件表项 
+
+
+#endif
