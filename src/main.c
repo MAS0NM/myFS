@@ -93,7 +93,7 @@ int main()
                     }  
                     else  
                         printf("Please input the right command.\n");  
-                    break;  
+                    break; 
                 case 7:  
                     if(!(openfilelist[curdir].attribute & 0x20))  
                         curdir = my_close(curdir);  
