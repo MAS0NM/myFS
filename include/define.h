@@ -10,7 +10,7 @@
 #define MAXTEXT 10000			
 #define ROOTBLOCKNUM 2			//根目录区所占盘块数
 
-typedef struct FCB
+typedef struct FCB              //8 + 3 + 1 + 2 + 2 + 2 + 8 + 1 = 27
 {
     char filename[8];           //文件名
     char exname[3];             //文件扩展名

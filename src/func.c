@@ -60,7 +60,7 @@ void startsys()
 
 void my_format()  
 {  
-    FILE *fp;  
+    FILE *fp;
     fat *fat1, *fat2;
     block0 *blk0;
     time_t now;
@@ -148,6 +148,16 @@ void my_cd(char *dirname)
 
 void my_mkdir(char *dirname)  
 {  
+    /*
+     * 当前目录：当前打开目录项表示的目录
+     * 该目录：以下指创建的目录
+     * 父目录：指该目录的父目录
+     * 如:
+     * 我现在在 root 目录下， 输入命令 mkdir a/b/bb
+     * 表示 在 root 目录下的 a 目录下的 b 目录中创建 bb 目录
+     * 这时，父目录指 b，该目录指 bb，当前目录指 root
+     * 以下都用这个表达，简单情况下，当前目录和父目录是一个目录
+     */
     fcb *fcbptr;  
     fat *fat1, *fat2;  
     time_t now;  
@@ -159,8 +169,12 @@ void my_mkdir(char *dirname)
     fat2 = (fat *)(myvhard + 3 * BLOCKSIZE);  
     openfilelist[curdir].count = 0;  
     rbn = do_read(curdir, openfilelist[curdir].length, text);  
-    fcbptr = (fcb *)text;  
-    for(i = 0; i < rbn / sizeof(fcb); i++)//在当前目录下找，是否有重名目录  
+    fcbptr = (fcb *)text;                   //字符数组强转为结构体指针后其内存数据一一对应
+    printf("%s\n", "---------the content of text-------------");
+    printf("%s", text);
+    printf("\n-------END----------\n");
+    printf("filename = %s\nattribute = %c\nfirst = %u\nlength = %u\n", fcbptr -> filename, fcbptr -> attribute, fcbptr -> first, fcbptr -> length);  
+    for(i = 0; i < rbn / sizeof(fcb); i++)  //在当前目录下找，是否有重名目录  
     {  
         if(strcmp(fcbptr -> filename, dirname) == 0 && strcmp(fcbptr -> exname, "") == 0)  
         {  
@@ -176,7 +190,7 @@ void my_mkdir(char *dirname)
             break;  
         fcbptr++;  
     }  
-    blkno = findblock();//寻找空闲盘块  
+    blkno = findblock();                    //寻找空闲盘块  
     if(blkno == -1)  
         return;  
     (fat1 + blkno) -> id = END;  
@@ -287,6 +301,7 @@ void my_rmdir(char *dirname)
     do_write(curdir, (char *)fcbptr, sizeof(fcb), 2);  
     openfilelist[curdir].fcbstate = 1;  
 }  
+
 void my_ls()  
 {  
     fcb *fcbptr;  
@@ -307,6 +322,7 @@ void my_ls()
         fcbptr++;  
     }  
 }  
+
 void my_create(char *filename)  
 {  
     fcb *fcbptr;  
@@ -373,6 +389,7 @@ void my_create(char *filename)
     do_write(curdir, (char *)fcbptr, sizeof(fcb), 2);  
     openfilelist[curdir].fcbstate = 1;  
 }  
+
 void my_rm(char *filename)  
 {  
     fcb *fcbptr;  
@@ -437,6 +454,7 @@ void my_rm(char *filename)
     do_write(curdir, (char *)fcbptr, sizeof(fcb), 2);  
     openfilelist[curdir].fcbstate = 1;  
 }  
+
 int my_open(char *filename)  
 {  
     fcb *fcbptr;  
@@ -449,7 +467,7 @@ int my_open(char *filename)
     //冗余
     else  
         strcpy(exname, "");  
-    for(i = 0; i < MAXOPENFILE; i++)  
+    for(i = 0; i < MAXOPENFILE; i++)                    //检查此文件是否被打开
     {  
         //疑似有误
         if(strcmp(openfilelist[i].filename, fname) == 0 && strcmp(openfilelist[i].exname, exname) == 0 && i != curdir)  
@@ -461,7 +479,7 @@ int my_open(char *filename)
     openfilelist[curdir].count = 0;  
     rbn = do_read(curdir, openfilelist[curdir].length, text);  
     fcbptr = (fcb *)text;  
-    for(i = 0; i < rbn / sizeof(fcb); i++)  
+    for(i = 0; i < rbn / sizeof(fcb); i++)              //从打开的文件中寻找此文件
     {  
         if(strcmp(fcbptr -> filename, fname) == 0 && strcmp(fcbptr -> exname, exname) == 0)  
             break;  
