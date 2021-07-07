@@ -64,7 +64,7 @@ void my_format()
     time_t now;
     struct tm *nowtime;  
     fcb *root;  
-    blk0 = (block0 *)myvhard;  
+    blk0 = (block0 *)myvhard;               //把blk0写入第一个盘块
     fat1 = (fat *)(myvhard + BLOCKSIZE);  
     fat2 = (fat *)(myvhard + 3 * BLOCKSIZE);  
     root = (fcb *)(myvhard + 5 * BLOCKSIZE);  
@@ -77,11 +77,11 @@ void my_format()
         fat1[i].id = END;  
         fat2[i].id = END;  
     }  
-    fat1[5].id = 6;
+    fat1[5].id = 6;                                     //第6，7个块都是root
     fat2[5].id = 6; 
     fat1[6].id = END;
     fat2[6].id = END; 
-    for(int i = 7; i < SIZE / BLOCKSIZE; i++)  
+    for(int i = 7; i < SIZE / BLOCKSIZE; i++)           //从8号开始都是空的
     {  
         fat1[i].id = FREE;  
         fat2[i].id = FREE;  
@@ -447,9 +447,8 @@ int my_open(char *filename)
     //冗余
     else  
         strcpy(exname, "");  
-    for(i = 0; i < MAXOPENFILE; i++)  
+    for(i = 0; i < MAXOPENFILE; i++)        //检查该文件是否已经被打开
     {  
-        //疑似有误
         if(strcmp(openfilelist[i].filename, fname) == 0 && strcmp(openfilelist[i].exname, exname) == 0 && i != curdir)  
         {  
             printf("Error,the file is already open.\n");  
@@ -470,7 +469,7 @@ int my_open(char *filename)
         printf("Error, file not exist.\n");  
         return -1;  
     }  
-    fd = findopenfile();  
+    fd = findopenfile();    //找到一个空的表项，把文件数据写入，模拟把磁盘文件写入内存的过程
     if(fd == -1)  
         return -1;  
     strcpy(openfilelist[fd].filename, fcbptr->filename);  
@@ -500,13 +499,13 @@ int my_close(int fd)
     int father;  
     if(fd < 0 || fd >= MAXOPENFILE)  
     {  
-        printf("Error,the file is not exist.\n");  
+        printf("Error, the file does not exist.\n");  
         return -1;  
     }  
     if(openfilelist[fd].fcbstate)  
     {  
         fcbptr = (fcb *)malloc(sizeof(fcb));  
-        strcpy(fcbptr->filename, openfilelist[fd].filename);  
+        strcpy(fcbptr->filename, openfilelist[fd].filename);                    //把openfilelist里的东西写到fcb里，模拟将内存写入磁盘的过程
         strcpy(fcbptr->exname, openfilelist[fd].exname);  
         fcbptr->attribute = openfilelist[fd].attribute;  
         fcbptr->time = openfilelist[fd].time;  
@@ -625,3 +624,50 @@ void my_exitsys()
     free(myvhard);  
 }  
  
+int my_rename(int fd, char *oldName, char *newName)
+{
+    fcb *fcbptr;
+    char *oldFileName, *newFileName, exnameOld[3], *str, text[MAXTEXT], exnameNew[3];  
+    int rbn, i;
+    oldFileName = strtok(oldName, ".");
+    str = strtok(NULL, ".");
+    printf("str = %s\noldFileName = %s\n", str, oldFileName);
+    if (str)
+        strcpy(exnameOld, str);
+    else
+        strcpy(exnameOld, "");
+    // printf("11111111exnameOld = %s\n", exnameOld);
+    newFileName = strtok(newName, ".");
+    str = strtok(NULL, ".");
+    // printf("222222222222exnameOld = %s\n", exnameOld);
+    if (str)
+        strcpy(exnameNew, str);
+    else
+        strcpy(exnameNew, "");
+    // printf("3333333333exnameOld = %s\n", exnameOld);
+    for (i = 0; i < MAXOPENFILE; i++)  //检查该文件是否已经被打开，如果打开，则无法改名
+    {  
+        if(strcmp(openfilelist[i].filename, oldFileName) == 0 && strcmp(openfilelist[i].exname, exnameOld) == 0 && i != curdir)
+        {  
+            printf("Error, you have to close the file before renaming\n");
+            return -1;
+        }  
+    }
+    openfilelist[curdir].count = 0;
+    rbn = do_read(curdir, openfilelist[curdir].length, text);
+    fcbptr = (fcb*)text;
+    for(i = 0; i < rbn / sizeof(fcb); i++)  
+    {  
+        printf("fcb content is %s.%s\ntarget file is %s.%s\n", fcbptr -> filename, fcbptr -> exname, oldFileName, exnameOld);
+        if(strcmp(fcbptr -> filename, oldFileName) == 0 && strcmp(fcbptr -> exname, exnameOld) == 0)  
+            break;  
+        fcbptr++;  
+    } 
+    if (i == rbn / sizeof(fcb)) 
+    {
+        printf("Error, file not exist.\n");
+        return -1;
+    }
+    strcpy(fcbptr -> filename, newFileName);
+    strcpy(fcbptr -> exname, exnameNew);
+}
