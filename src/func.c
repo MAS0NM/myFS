@@ -170,10 +170,6 @@ void my_mkdir(char *dirname)
     openfilelist[curdir].count = 0;  
     rbn = do_read(curdir, openfilelist[curdir].length, text);  
     fcbptr = (fcb *)text;                   //字符数组强转为结构体指针后其内存数据一一对应
-    printf("%s\n", "---------the content of text-------------");
-    printf("%s", text);
-    printf("\n-------END----------\n");
-    printf("filename = %s\nattribute = %c\nfirst = %u\nlength = %u\n", fcbptr -> filename, fcbptr -> attribute, fcbptr -> first, fcbptr -> length);  
     for(i = 0; i < rbn / sizeof(fcb); i++)  //在当前目录下找，是否有重名目录  
     {  
         if(strcmp(fcbptr -> filename, dirname) == 0 && strcmp(fcbptr -> exname, "") == 0)  
@@ -464,7 +460,6 @@ int my_open(char *filename)
     str = strtok(NULL, ".");  
     if(str)  
         strcpy(exname, str);  
-    //冗余
     else  
         strcpy(exname, "");  
     for(i = 0; i < MAXOPENFILE; i++)        //检查该文件是否已经被打开
@@ -478,7 +473,7 @@ int my_open(char *filename)
     openfilelist[curdir].count = 0;  
     rbn = do_read(curdir, openfilelist[curdir].length, text);  
     fcbptr = (fcb *)text;  
-    for(i = 0; i < rbn / sizeof(fcb); i++)              //从打开的文件中寻找此文件
+    for(i = 0; i < rbn / sizeof(fcb); i++)
     {  
         if(strcmp(fcbptr -> filename, fname) == 0 && strcmp(fcbptr -> exname, exname) == 0)  
             break;  
@@ -522,23 +517,22 @@ int my_close(int fd)
         printf("Error, the file does not exist.\n");  
         return -1;  
     }  
-    if(openfilelist[fd].fcbstate)  
-    {  
-        fcbptr = (fcb *)malloc(sizeof(fcb));  
-        strcpy(fcbptr->filename, openfilelist[fd].filename);                    //把openfilelist里的东西写到fcb里，模拟将内存写入磁盘的过程
-        strcpy(fcbptr->exname, openfilelist[fd].exname);  
-        fcbptr->attribute = openfilelist[fd].attribute;  
-        fcbptr->time = openfilelist[fd].time;  
-        fcbptr->date = openfilelist[fd].date;  
-        fcbptr->first = openfilelist[fd].first;  
-        fcbptr->length = openfilelist[fd].length;  
-        fcbptr->free = openfilelist[fd].free;  
-        father = openfilelist[fd].father;  
-        openfilelist[father].count = openfilelist[fd].diroff * sizeof(fcb);  
-        do_write(father, (char *)fcbptr, sizeof(fcb), 2);  
-        free(fcbptr);  
-        openfilelist[fd].fcbstate = 0;  
-    }  
+  
+    fcbptr = (fcb *)malloc(sizeof(fcb));  
+    strcpy(fcbptr->filename, openfilelist[fd].filename);                    //把openfilelist里的东西写到fcb里，模拟将内存写入磁盘的过程
+    strcpy(fcbptr->exname, openfilelist[fd].exname);  
+    fcbptr->attribute = openfilelist[fd].attribute;  
+    fcbptr->time = openfilelist[fd].time;  
+    fcbptr->date = openfilelist[fd].date;  
+    fcbptr->first = openfilelist[fd].first;  
+    fcbptr->length = openfilelist[fd].length;  
+    fcbptr->free = openfilelist[fd].free;  
+    father = openfilelist[fd].father;  
+    openfilelist[father].count = openfilelist[fd].diroff * sizeof(fcb);  
+    do_write(father, (char *)fcbptr, sizeof(fcb), 2);  
+    free(fcbptr);  
+    openfilelist[fd].fcbstate = 0;  
+  
     strcpy(openfilelist[fd].filename, "");  
     strcpy(openfilelist[fd].exname, "");  
     openfilelist[fd].topenfile = 0;  
@@ -647,8 +641,8 @@ void my_exitsys()
 int my_rename(int fd, char *oldName, char *newName)
 {    
     fcb *fcbptr;
-    char *oldFileName, *newFileName, exnameOld[3], *str, text[MAXTEXT], exnameNew[3];  
-    int rbn, i;
+    char *oldFileName, *newFileName, exnameOld[3], *str, exnameNew[3];  
+    int i;
     unsigned short blkno;
     oldFileName = strtok(oldName, ".");
     str = strtok(NULL, ".");
@@ -679,11 +673,54 @@ int my_rename(int fd, char *oldName, char *newName)
             break;
         fcbptr ++;  
     } 
-    if (i == rbn / sizeof(fcb)) 
+    if (i == BLOCKSIZE) 
     {
         printf("Error, file not exist.\n");
         return -1;
     }
     strcpy(fcbptr -> filename, newFileName);
     strcpy(fcbptr -> exname, exnameNew);
+}
+
+
+int my_move(char *filename, char *dir)
+{
+    fcb *fcbptr1, *fcbptr2;  
+    char *fname, exname[3], *str, text[MAXTEXT];  
+    int rbn, fd, i;  
+    fname = strtok(filename, ".");  
+    str = strtok(NULL, ".");  
+    if(str)  
+        strcpy(exname, str);   
+    for(i = 0; i < MAXOPENFILE; i++)        //检查该文件是否已经被打开
+    {  
+        if(strcmp(openfilelist[i].filename, fname) == 0 && strcmp(openfilelist[i].exname, exname) == 0 && i != curdir)  
+        {  
+            printf("Error, you have to close the file before moving.\n");  
+            return -1;  
+        }  
+    }
+    openfilelist[curdir].count = 0;  
+    do_read(curdir, openfilelist[curdir].length, text);  
+    fcbptr1 = (fcb *)text;
+    for(i = 0; i < BLOCKSIZE / sizeof(fcb); i++)
+    {  
+        if(strcmp(fcbptr1 -> filename, fname) == 0 && strcmp(fcbptr1 -> exname, exname) == 0)  
+            break;  
+        fcbptr1++;  
+    }
+    if(i == BLOCKSIZE / sizeof(fcb))  
+    {  
+        printf("Error, file not exist.\n");  
+        return -1;  
+    }
+    fd = my_open(dir);
+    if (fd != -1)
+        curdir = fd;
+
+    openfilelist[curdir].count = 0;  
+    do_read(curdir, openfilelist[curdir].length, text);  
+    fcbptr2 = (fcb *)text;
+
+    do_write(curdir, (char *)fcbptr1, sizeof(fcb), 2);
 }

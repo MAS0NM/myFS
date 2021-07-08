@@ -4,7 +4,7 @@
 
 int main()  
 {  
-    char cmd[15][10] = {"cd", "mkdir", "rmdir", "ls", "create", "rm", "open", "close", "write", "read", "exit", "rename"};  
+    char cmd[15][10] = {"cd", "mkdir", "rmdir", "ls", "create", "rm", "open", "close", "write", "read", "exit", "rename", "mv"};  
     char s[30], *sp;  
     int cmdn, flag = 1, i;  
     startsys();  
@@ -133,9 +133,19 @@ int main()
                     else
                         printf("Please input the right command.\n");
                     break;
+                case 12:;
+                    char *filename, *dir;
+                    filename = strtok(NULL, " ");
+                    dir = filename;
+                    dir = strtok(NULL, " ");
+                    if (openfilelist[curdir].attribute & 0x20 && filename && dir)
+                        my_move(filename, dir);
+                    else
+                        printf("Please input the right command.\n");
+                    break;
                 default:  
                     printf("Please input the right command.\n");  
-                    break;  
+                    break;                      
             }  
         }  
     }  
