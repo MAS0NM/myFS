@@ -122,18 +122,18 @@ int do_read(int fd, int len, char *text)
     while(ll < len)  
     {  
         blkptr = (unsigned char *)(myvhard + blkno * BLOCKSIZE);  
-        printf("blockno is %u\nbuf content is ", blkno);
+        // printf("blockno is %u\nbuf content is ", blkno);
         for(i = 0; i < BLOCKSIZE; i++)              //把一整个块的数据都写到buf里
             buf[i] = blkptr[i];  
         for(; blkoff < BLOCKSIZE; blkoff++)  
         {  
-            printf("%c", buf[blkoff]);
+            // printf("%c", buf[blkoff]);
             text[ll++] = buf[blkoff];  
             openfilelist[fd].count++;  
             if(ll == len || openfilelist[fd].count == openfilelist[fd].length)  
                 break;  
         }  
-        printf("\n-------------end---------------\n");
+        // printf("\n-------------end---------------\n");
         if(ll < len && openfilelist[fd].count != openfilelist[fd].length)  
         {  
             blkno = fatptr -> id;  
@@ -144,7 +144,7 @@ int do_read(int fd, int len, char *text)
         }  
     }  
     text[ll] = '\0';  
-    printf("ll = %d\n", ll);
+    // printf("ll = %d\n", ll);
     free(buf);  
     return ll;  
 }  

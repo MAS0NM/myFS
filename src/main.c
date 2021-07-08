@@ -4,7 +4,7 @@
 
 int main()  
 {  
-    char cmd[15][10] = {"cd", "mkdir", "rmdir", "ls", "create", "rm", "open", "close", "write", "read", "exit"};  
+    char cmd[15][10] = {"cd", "mkdir", "rmdir", "ls", "create", "rm", "open", "close", "write", "read", "exit", "rename"};  
     char s[30], *sp;  
     int cmdn, flag = 1, i;  
     startsys();  
@@ -17,6 +17,7 @@ int main()
     printf("create\t\t文件名\t\t\t在当前目录下创建指定文件\n");  
     printf("rm\t\t文件名\t\t\t在当前目录下删除指定文件\n");  
     printf("open\t\t文件名\t\t\t在当前目录下打开指定文件\n");  
+    printf("rename\t\t文件名\t\t文件名\t\t\t在当前目录下修改指定文件的文件名\n");  
     printf("write\t\t无\t\t\t在打开文件状态下，写该文件\n");  
     printf("read\t\t无\t\t\t在打开文件状态下，读取该文件\n");  
     printf("close\t\t无\t\t\t在打开文件状态下，读取该文件\n");  
@@ -112,7 +113,7 @@ int main()
                     else  
                         printf("No files opened.\n");  
                     break;  
-                    case 10:  
+                case 10:  
                     if(openfilelist[curdir].attribute & 0x20)  
                     {  
                         my_exitsys();  
@@ -121,6 +122,17 @@ int main()
                     else  
                         printf("Please input the right command.\n");  
                     break;  
+                case 11:;
+                    char *oldName; //
+                    char *newName; //
+                    oldName = strtok(NULL, " ");             //获取旧文件名
+                    newName = oldName;
+                    newName = strtok(NULL, " ");             //获取新文件名
+                    if(openfilelist[curdir].attribute & 0x20 && oldName && newName)
+                        my_rename(curdir, oldName, newName);
+                    else
+                        printf("Please input the right command.\n");
+                    break;
                 default:  
                     printf("Please input the right command.\n");  
                     break;  
