@@ -26,12 +26,6 @@
 #include <malloc.h>
 #include <string.h>
 #pragma warning (disable : 4996)
-/*
-д����
-������:
--1          malloc failed
-write_size  success
-*/
 char myfilename[] = "myfilesys";
 int do_write(int fd, char* text, int len, char wstyle) {
     fat* fat1, * fat2, * fatptr1, * fatptr2;
